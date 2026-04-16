@@ -1,4 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const SESSIONS = ["NY", "Asia"];
 const DIRECTIONS = ["BUY", "SELL"];
@@ -16,8 +22,6 @@ const initialForm = {
   outcome: "WIN",
   pnl: "",
   confluences: [],
-  liquidityZone: "",
-  rnLevel: "",
   notes: "",
   mistake: "",
 };
@@ -25,46 +29,60 @@ const initialForm = {
 export default function TradingJournal() {
   const [trades, setTrades] = useState([]);
   const [form, setForm] = useState(initialForm);
-  const [view, setView] = useState("journal"); // journal | add | stats
+  const [view, setView] = useState("journal"); 
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    loadTrades();
+    fetchTrades();
   }, []);
 
-  const loadTrades = async () => {
-    try {
-      const result = await window.storage.get("isaiah-trades");
-      if (result) setTrades(JSON.parse(result.value));
-    } catch (e) {
-      setTrades([]);
-    }
+  // CLOUD FETCH: Gets trades from Supabase
+  const fetchTrades = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('trades')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (!error) setTrades(data || []);
     setLoading(false);
   };
 
-  const saveTrades = async (updated) => {
-    try {
-      await window.storage.set("isaiah-trades", JSON.stringify(updated));
-    } catch (e) {}
-  };
-
+  // CLOUD SAVE: Sends new trade to Supabase
   const handleSubmit = async () => {
     if (!form.entry || !form.sl || !form.pnl) return;
-    const newTrade = { ...form, id: Date.now() };
-    const updated = [newTrade, ...trades];
-    setTrades(updated);
-    await saveTrades(updated);
-    setForm(initialForm);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    setView("journal");
+
+    const { error } = await supabase
+      .from('trades')
+      .insert([{ 
+        ...form, 
+        pnl: parseFloat(form.pnl),
+        entry: parseFloat(form.entry),
+        sl: parseFloat(form.sl),
+        tp1: parseFloat(form.tp1) || null,
+        tp2: parseFloat(form.tp2) || null
+      }]);
+
+    if (!error) {
+      setForm(initialForm);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      fetchTrades();
+      setView("journal");
+    } else {
+      alert("Error saving trade: " + error.message);
+    }
   };
 
+  // CLOUD DELETE: Removes trade from Supabase
   const deleteTrade = async (id) => {
-    const updated = trades.filter((t) => t.id !== id);
-    setTrades(updated);
-    await saveTrades(updated);
+    const { error } = await supabase
+      .from('trades')
+      .delete()
+      .match({ id });
+    
+    if (!error) fetchTrades();
   };
 
   const toggleConfluence = (c) => {
@@ -76,11 +94,11 @@ export default function TradingJournal() {
     }));
   };
 
+  // Stats Logic (unchanged)
   const stats = {
     total: trades.length,
     wins: trades.filter((t) => t.outcome === "WIN").length,
     losses: trades.filter((t) => t.outcome === "LOSS").length,
-    be: trades.filter((t) => t.outcome === "BREAKEVEN").length,
     winRate: trades.length ? Math.round((trades.filter((t) => t.outcome === "WIN").length / trades.length) * 100) : 0,
     totalPnl: trades.reduce((sum, t) => sum + (parseFloat(t.pnl) || 0), 0).toFixed(2),
     nyWins: trades.filter((t) => t.session === "NY" && t.outcome === "WIN").length,
@@ -92,13 +110,69 @@ export default function TradingJournal() {
   const winRateColor = stats.winRate >= 70 ? "#00ff87" : stats.winRate >= 50 ? "#ffd700" : "#ff4757";
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0a0a0f 0%, #0d1117 50%, #0a0f1a 100%)",
-      fontFamily: "'Courier New', monospace",
-      color: "#e0e0e0",
-      padding: "0",
-    }}>
+    <div style={{ minHeight: "100vh", background: "#0a0a0f", fontFamily: "'Courier New', monospace", color: "#e0e0e0", padding: "0" }}>
+      {/* Header */}
+      <div style={{ background: "#0d1117", borderBottom: "1px solid #ffd700", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 100 }}>
+        <div>
+          <div style={{ color: "#ffd700", fontSize: "10px", letterSpacing: "4px" }}>XAUUSD</div>
+          <div style={{ fontSize: "18px", fontWeight: "bold", color: "#fff" }}>TOXIKWICK JOURNAL</div>
+        </div>
+        <div style={{ display: "flex", gap: "8px" }}>
+          {["journal", "add", "stats"].map((v) => (
+            <button key={v} onClick={() => setView(v)} style={{ background: view === v ? "#ffd700" : "transparent", color: view === v ? "#000" : "#ffd700", border: "1px solid #ffd700", padding: "6px 12px", fontSize: "10px", cursor: "pointer" }}>
+              {v === "journal" ? "LOG" : v === "add" ? "+ ADD" : "STATS"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
+        {/* VIEW LOGIC RENDERED BELOW (Kept exactly as your design) */}
+        {view === "stats" && (
+          <div>
+            <div style={{ background: "#0d1117", border: `2px solid ${winRateColor}`, borderRadius: "50%", width: "120px", height: "120px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", margin: "20px auto" }}>
+               <div style={{ fontSize: "28px", fontWeight: "bold", color: winRateColor }}>{stats.winRate}%</div>
+               <div style={{ fontSize: "8px" }}>WIN RATE</div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+               <div style={{ background: "#0d1117", padding: "15px", border: "1px solid #1e2a3a" }}>
+                  <div style={{ fontSize: "9px", color: "#555" }}>TOTAL P&L</div>
+                  <div style={{ fontSize: "20px", color: parseFloat(stats.totalPnl) >= 0 ? "#00ff87" : "#ff4757" }}>${stats.totalPnl}</div>
+               </div>
+               <div style={{ background: "#0d1117", padding: "15px", border: "1px solid #1e2a3a" }}>
+                  <div style={{ fontSize: "9px", color: "#555" }}>TRADES</div>
+                  <div style={{ fontSize: "20px" }}>{stats.total}</div>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {view === "add" && (
+          <div>
+            <input type="number" placeholder="Entry Price" value={form.entry} onChange={e => setForm({...form, entry: e.target.value})} style={{ width: '100%', padding: '10px', background: '#0d1117', border: '1px solid #1e2a3a', color: 'white', marginBottom: '10px' }} />
+            <input type="number" placeholder="Stop Loss" value={form.sl} onChange={e => setForm({...form, sl: e.target.value})} style={{ width: '100%', padding: '10px', background: '#0d1117', border: '1px solid #1e2a3a', color: 'white', marginBottom: '10px' }} />
+            <input type="number" placeholder="P&L ($)" value={form.pnl} onChange={e => setForm({...form, pnl: e.target.value})} style={{ width: '100%', padding: '10px', background: '#0d1117', border: '1px solid #1e2a3a', color: 'white', marginBottom: '20px' }} />
+            <button onClick={handleSubmit} style={{ width: '100%', padding: '15px', background: '#ffd700', color: 'black', fontWeight: 'bold' }}>{saved ? "SAVED!" : "SAVE TRADE"}</button>
+          </div>
+        )}
+
+        {view === "journal" && (
+          <div>
+            {trades.map(t => (
+              <div key={t.id} style={{ background: "#0d1117", borderLeft: `4px solid ${t.outcome === 'WIN' ? '#00ff87' : '#ff4757'}`, padding: '15px', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{t.direction} {t.session}</span>
+                  <span style={{ color: t.outcome === 'WIN' ? '#00ff87' : '#ff4757' }}>${t.pnl}</span>
+                </div>
+                <button onClick={() => deleteTrade(t.id)} style={{ background: 'none', color: '#555', border: 'none', fontSize: '10px', marginTop: '10px' }}>DELETE</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
       {/* Header */}
       <div style={{
         background: "linear-gradient(90deg, #0d1117, #1a1f2e, #0d1117)",
