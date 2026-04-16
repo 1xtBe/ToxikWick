@@ -8,109 +8,134 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { background-color: #0a0e17; }
+        body { background-color: #0a0e17; color: #d1d5db; }
         .gold-text { color: #fbbf24; }
-        .gold-border { border-color: #fbbf24; }
         .gold-bg { background-color: #fbbf24; }
-        input, select { background-color: #111827; border: 1px solid #374151; color: white; padding: 10px; border-radius: 4px; }
+        input, select { background-color: #111827; border: 1px solid #374151; color: white; padding: 12px; border-radius: 4px; width: 100%; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
+
+        // --- PASTE YOUR DETAILS HERE ---
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        // -------------------------------
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function App() {
-            const [view, setView] = useState('log'); // 'log', 'add', or 'stats'
+            const [view, setView] = useState('log');
+            const [trades, setTrades] = useState([]);
+            const [loading, setLoading] = useState(false);
+
+            // Form States
+            const [entry, setEntry] = useState('');
+            const [sl, setSl] = useState('');
+            const [tp, setTp] = useState('');
+            const [outcome, setOutcome] = useState('WIN');
+            const [session, setSession] = useState('NY');
+
+            useEffect(() => {
+                fetchTrades();
+            }, []);
+
+            async function fetchTrades() {
+                const { data, error } = await supabaseClient
+                    .from('trades')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (data) setTrades(data);
+            }
+
+            async function saveTrade() {
+                if(!entry || !sl) return alert("Enter price details");
+                setLoading(true);
+                
+                const { error } = await supabaseClient.from('trades').insert([{
+                    entry_price: parseFloat(entry),
+                    stop_loss: parseFloat(sl),
+                    tp_level: parseFloat(tp),
+                    outcome: outcome,
+                    session: session,
+                    pair: 'XAUUSD'
+                }]);
+
+                if (!error) {
+                    setEntry(''); setSl(''); setTp('');
+                    await fetchTrades();
+                    setView('log');
+                } else {
+                    alert("Error: " + error.message);
+                }
+                setLoading(false);
+            }
 
             return (
-                <div class="min-h-screen text-gray-300 p-4 max-w-lg mx-auto">
-                    {/* Header Section */}
-                    <div class="mb-6">
-                        <p class="text-[10px] gold-text tracking-widest mb-1">X A U U S D</p>
-                        <div class="flex justify-between items-center">
-                            <h1 class="text-xl font-bold text-white tracking-tighter">TRADE JOURNAL</h1>
-                            <div class="flex gap-2">
-                                <button onClick={() => setView('log')} class={`px-3 py-1 text-[10px] border ${view === 'log' ? 'gold-bg text-black' : 'border-yellow-600 gold-text'}`}>LOG</button>
-                                <button onClick={() => setView('add')} class={`px-3 py-1 text-[10px] border ${view === 'add' ? 'gold-bg text-black' : 'border-yellow-600 gold-text'}`}>+ ADD</button>
-                                <button onClick={() => setView('stats')} class={`px-3 py-1 text-[10px] border ${view === 'stats' ? 'gold-bg text-black' : 'border-yellow-600 gold-text'}`}>STATS</button>
-                            </div>
-                        </div>
-                        <div class="h-[1px] gold-bg mt-4 w-full opacity-50"></div>
-                    </div>
-
-                    {/* View: Trade Log */}
-                    {view === 'log' && (
+                <div class="max-w-md mx-auto p-4 min-h-screen">
+                    <header class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
                         <div>
-                            <div class="flex justify-between items-center mb-10">
-                                <h2 class="text-[10px] gold-text tracking-widest uppercase">Trade Log</h2>
-                                <p class="text-[10px] text-gray-500">0 TRADES</p>
-                            </div>
-                            <div class="flex flex-col items-center justify-center mt-20 opacity-40">
-                                <div class="text-4xl mb-4">📈</div>
-                                <p class="text-xs tracking-widest">NO TRADES LOGGED YET</p>
-                                <p class="text-[10px] mt-2">Press + ADD to log your first trade</p>
-                            </div>
+                            <p class="text-[10px] gold-text tracking-[0.2em]">XAUUSD</p>
+                            <h1 class="font-bold text-xl text-white">TRADE JOURNAL</h1>
                         </div>
-                    )}
+                        <div class="flex gap-2">
+                            <button onClick={() => setView('log')} class={`text-[10px] px-3 py-1 border ${view === 'log' ? 'gold-bg text-black font-bold' : 'border-yellow-600 gold-text'}`}>LOG</button>
+                            <button onClick={() => setView('add')} class={`text-[10px] px-3 py-1 border ${view === 'add' ? 'gold-bg text-black font-bold' : 'border-yellow-600 gold-text'}`}>+ ADD</button>
+                        </div>
+                    </header>
 
-                    {/* View: Add Trade Form */}
-                    {view === 'add' && (
-                        <div class="space-y-4">
-                            <h2 class="text-[10px] gold-text tracking-widest uppercase mb-4">Log New Trade</h2>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="flex flex-col">
-                                    <label class="text-[10px] mb-1">DATE</label>
-                                    <input type="date" defaultValue="2026-04-16" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-[10px] mb-1">SESSION</label>
-                                    <div class="flex gap-1">
-                                        <button class="flex-1 gold-bg text-black text-[10px] py-2 font-bold">NY</button>
-                                        <button class="flex-1 border border-yellow-600 gold-text text-[10px] py-2">Asia</button>
+                    {view === 'log' ? (
+                        <div class="space-y-3">
+                            {trades.length === 0 ? (
+                                <div class="text-center opacity-30 mt-20 uppercase text-[10px] tracking-widest">No trades found in database</div>
+                            ) : (
+                                trades.map(t => (
+                                    <div class="bg-gray-900 p-4 border-l-2 border-yellow-500 flex justify-between items-center">
+                                        <div>
+                                            <p class="text-[10px] gold-text">{t.session} SESSION</p>
+                                            <p class="text-sm font-bold">Entry: {t.entry_price}</p>
+                                        </div>
+                                        <span class={`text-[10px] font-bold px-2 py-1 rounded ${t.outcome === 'WIN' ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'}`}>
+                                            {t.outcome}
+                                        </span>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col">
-                                <label class="text-[10px] mb-1">DIRECTION</label>
-                                <div class="flex gap-2">
-                                    <button class="flex-1 bg-green-500 text-black font-bold py-4">BUY</button>
-                                    <button class="flex-1 border border-red-500 text-red-500 py-4">SELL</button>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="flex flex-col"><label class="text-[10px]">ENTRY PRICE</label><input type="text" placeholder="0.000" /></div>
-                                <div class="flex flex-col"><label class="text-[10px]">STOP LOSS</label><input type="text" placeholder="0.000" /></div>
-                            </div>
-
-                            <div class="flex flex-col">
-                                <label class="text-[10px] mb-1">OUTCOME</label>
-                                <div class="space-y-2">
-                                    <button class="w-full bg-green-500 text-black py-2 font-bold text-[10px]">WIN</button>
-                                    <button class="w-full border border-red-500 text-red-500 py-2 text-[10px]">LOSS</button>
-                                    <button class="w-full border border-yellow-600 gold-text py-2 text-[10px]">BREAKEVEN</button>
-                                </div>
-                            </div>
+                                ))
+                            )}
                         </div>
-                    )}
-
-                    {/* View: Stats */}
-                    {view === 'stats' && (
-                        <div class="text-center">
-                            <h2 class="text-[10px] gold-text tracking-widest uppercase mb-6">Performance Overview</h2>
-                            <div class="relative w-40 h-40 mx-auto mb-8 border-4 border-red-500 rounded-full flex flex-col items-center justify-center">
-                                <p class="text-3xl font-bold text-white">0%</p>
-                                <p class="text-[8px] text-gray-500">WIN RATE</p>
-                                <p class="text-[8px] text-gray-500">TARGET: 70%</p>
+                    ) : (
+                        <div class="space-y-5">
+                            <div>
+                                <label class="text-[10px] gold-text block mb-1">SESSION</label>
+                                <div class="flex gap-2">
+                                    {['NY', 'Asia', 'London'].map(s => (
+                                        <button onClick={() => setSession(s)} class={`flex-1 py-2 text-[10px] border ${session === s ? 'gold-bg text-black' : 'border-gray-700'}`}>{s}</button>
+                                    ))}
+                                </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="bg-gray-900 p-4 rounded border border-gray-800"><p class="text-[8px] mb-1">TOTAL TRADES</p><p class="text-xl">0</p></div>
-                                <div class="bg-gray-900 p-4 rounded border border-gray-800"><p class="text-[8px] mb-1 text-green-500">TOTAL P&L</p><p class="text-xl text-green-500">$0.00</p></div>
+                            <div>
+                                <label class="text-[10px] gold-text block mb-1">ENTRY PRICE</label>
+                                <input type="number" step="0.01" value={entry} onChange={e => setEntry(e.target.value)} placeholder="0.00" />
                             </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="text-[10px] gold-text block mb-1">STOP LOSS</label><input type="number" step="0.01" value={sl} onChange={e => setSl(e.target.value)} /></div>
+                                <div><label class="text-[10px] gold-text block mb-1">TAKE PROFIT</label><input type="number" step="0.01" value={tp} onChange={e => setTp(e.target.value)} /></div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] gold-text block mb-1">OUTCOME</label>
+                                <select value={outcome} onChange={e => setOutcome(e.target.value)}>
+                                    <option value="WIN">WIN</option>
+                                    <option value="LOSS">LOSS</option>
+                                    <option value="BE">BREAKEVEN</option>
+                                </select>
+                            </div>
+                            <button onClick={saveTrade} disabled={loading} class="w-full gold-bg text-black font-bold py-4 rounded uppercase tracking-widest">
+                                {loading ? 'Processing...' : 'Secure Trade Log'}
+                            </button>
                         </div>
                     )}
                 </div>
