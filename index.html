@@ -27,9 +27,8 @@
         const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
         // -------------------------------
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         function App() {
+            const [client, setClient] = useState(null);
             const [view, setView] = useState('log');
             const [trades, setTrades] = useState([]);
             const [loading, setLoading] = useState(false);
@@ -42,11 +41,20 @@
             const [session, setSession] = useState('NY');
 
             useEffect(() => {
-                fetchTrades();
+                try {
+                    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    setClient(sb);
+                } catch (e) {
+                    console.error("Supabase load error:", e);
+                }
             }, []);
 
+            useEffect(() => {
+                if (client) fetchTrades();
+            }, [client]);
+
             async function fetchTrades() {
-                const { data, error } = await supabaseClient
+                const { data, error } = await client
                     .from('trades')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -54,13 +62,13 @@
             }
 
             async function saveTrade() {
-                if(!entry || !sl) return alert("Enter price details");
+                if(!entry || !sl) return alert("Please fill in Entry and Stop Loss");
                 setLoading(true);
                 
-                const { error } = await supabaseClient.from('trades').insert([{
+                const { error } = await client.from('trades').insert([{
                     entry_price: parseFloat(entry),
                     stop_loss: parseFloat(sl),
-                    tp_level: parseFloat(tp),
+                    tp_level: parseFloat(tp) || 0,
                     outcome: outcome,
                     session: session,
                     pair: 'XAUUSD'
@@ -71,9 +79,13 @@
                     await fetchTrades();
                     setView('log');
                 } else {
-                    alert("Error: " + error.message);
+                    alert("Database Error: " + error.message);
                 }
                 setLoading(false);
+            }
+
+            if (!SUPABASE_URL.startsWith('http')) {
+                return <div class="p-10 text-center text-red-500">Error: You must paste your Supabase URL in the code!</div>;
             }
 
             return (
@@ -81,7 +93,7 @@
                     <header class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
                         <div>
                             <p class="text-[10px] gold-text tracking-[0.2em]">XAUUSD</p>
-                            <h1 class="font-bold text-xl text-white">TRADE JOURNAL</h1>
+                            <h1 class="font-bold text-xl text-white tracking-tighter">TRADE JOURNAL</h1>
                         </div>
                         <div class="flex gap-2">
                             <button onClick={() => setView('log')} class={`text-[10px] px-3 py-1 border ${view === 'log' ? 'gold-bg text-black font-bold' : 'border-yellow-600 gold-text'}`}>LOG</button>
@@ -92,15 +104,15 @@
                     {view === 'log' ? (
                         <div class="space-y-3">
                             {trades.length === 0 ? (
-                                <div class="text-center opacity-30 mt-20 uppercase text-[10px] tracking-widest">No trades found in database</div>
+                                <div class="text-center opacity-30 mt-20 uppercase text-[10px] tracking-widest">No trades found</div>
                             ) : (
                                 trades.map(t => (
-                                    <div class="bg-gray-900 p-4 border-l-2 border-yellow-500 flex justify-between items-center">
+                                    <div key={t.id} class="bg-gray-900 p-4 border-l-2 border-yellow-500 flex justify-between items-center">
                                         <div>
                                             <p class="text-[10px] gold-text">{t.session} SESSION</p>
                                             <p class="text-sm font-bold">Entry: {t.entry_price}</p>
                                         </div>
-                                        <span class={`text-[10px] font-bold px-2 py-1 rounded ${t.outcome === 'WIN' ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'}`}>
+                                        <span class={`text-[10px] font-bold px-2 py-1 rounded ${t.outcome === 'WIN' ? 'bg-green-900 text-green-400' : t.outcome === 'LOSS' ? 'bg-red-900 text-red-400' : 'bg-gray-800 text-yellow-500'}`}>
                                             {t.outcome}
                                         </span>
                                     </div>
@@ -113,17 +125,17 @@
                                 <label class="text-[10px] gold-text block mb-1">SESSION</label>
                                 <div class="flex gap-2">
                                     {['NY', 'Asia', 'London'].map(s => (
-                                        <button onClick={() => setSession(s)} class={`flex-1 py-2 text-[10px] border ${session === s ? 'gold-bg text-black' : 'border-gray-700'}`}>{s}</button>
+                                        <button key={s} onClick={() => setSession(s)} class={`flex-1 py-2 text-[10px] border ${session === s ? 'gold-bg text-black font-bold' : 'border-gray-700'}`}>{s}</button>
                                     ))}
                                 </div>
                             </div>
                             <div>
-                                <label class="text-[10px] gold-text block mb-1">ENTRY PRICE</label>
-                                <input type="number" step="0.01" value={entry} onChange={e => setEntry(e.target.value)} placeholder="0.00" />
+                                <label class="text-[10px] gold-text block mb-1 tracking-widest uppercase">Entry Price</label>
+                                <input type="number" step="0.001" value={entry} onChange={e => setEntry(e.target.value)} placeholder="0.000" />
                             </div>
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="text-[10px] gold-text block mb-1">STOP LOSS</label><input type="number" step="0.01" value={sl} onChange={e => setSl(e.target.value)} /></div>
-                                <div><label class="text-[10px] gold-text block mb-1">TAKE PROFIT</label><input type="number" step="0.01" value={tp} onChange={e => setTp(e.target.value)} /></div>
+                                <div><label class="text-[10px] gold-text block mb-1">STOP LOSS</label><input type="number" step="0.001" value={sl} onChange={e => setSl(e.target.value)} /></div>
+                                <div><label class="text-[10px] gold-text block mb-1">TAKE PROFIT</label><input type="number" step="0.001" value={tp} onChange={e => setTp(e.target.value)} /></div>
                             </div>
                             <div>
                                 <label class="text-[10px] gold-text block mb-1">OUTCOME</label>
@@ -133,8 +145,8 @@
                                     <option value="BE">BREAKEVEN</option>
                                 </select>
                             </div>
-                            <button onClick={saveTrade} disabled={loading} class="w-full gold-bg text-black font-bold py-4 rounded uppercase tracking-widest">
-                                {loading ? 'Processing...' : 'Secure Trade Log'}
+                            <button onClick={saveTrade} disabled={loading} class="w-full gold-bg text-black font-bold py-4 rounded uppercase tracking-[0.2em]">
+                                {loading ? 'Logging Trade...' : 'Secure Trade Log'}
                             </button>
                         </div>
                     )}
