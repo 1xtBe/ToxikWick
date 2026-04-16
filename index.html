@@ -9,12 +9,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <style>
-        body { background-color: #0a0e17; color: #d1d5db; font-family: sans-serif; }
-        .gold-text { color: #fbbf24; }
-        .gold-bg { background-color: #fbbf24; }
-        input, select { background-color: #111827; border: 1px solid #374151; color: white; padding: 12px; border-radius: 4px; width: 100%; font-size: 14px; }
-    </style>
 </head>
 <body>
     <div id="root"></div>
@@ -23,124 +17,154 @@
         const { useState, useEffect } = React;
 
         // --- PASTE YOUR DETAILS HERE ---
-        const SUPABASE_URL = 'https://pewkiwknniphfwhnoxsv.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_l4PTYKlCiPoVGkQZj0loWQ_JMHGkGd3';
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
         // -------------------------------
 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const SESSIONS = ["NY", "Asia"];
+        const DIRECTIONS = ["BUY", "SELL"];
+        const OUTCOMES = ["WIN", "LOSS", "BREAKEVEN"];
+        const CONFLUENCES = ["Liquidity Zone", "RN Confluence", "Rejection Candle", "H1 Bias Aligned", "No News Event"];
+
+        const initialForm = {
+            date: new Date().toISOString().split("T")[0],
+            session: "NY",
+            direction: "BUY",
+            entry: "",
+            sl: "",
+            tp1: "",
+            tp2: "",
+            outcome: "WIN",
+            pnl: "",
+            confluences: [],
+            notes: "",
+            mistake: "",
+        };
+
         function App() {
-            const [client, setClient] = useState(null);
-            const [view, setView] = useState('log');
             const [trades, setTrades] = useState([]);
-            const [loading, setLoading] = useState(false);
+            const [form, setForm] = useState(initialForm);
+            const [view, setView] = useState("journal");
+            const [loading, setLoading] = useState(true);
+            const [saved, setSaved] = useState(false);
 
-            // Form States
-            const [entry, setEntry] = useState('');
-            const [sl, setSl] = useState('');
-            const [tp, setTp] = useState('');
-            const [outcome, setOutcome] = useState('WIN');
-            const [session, setSession] = useState('NY');
-
-            useEffect(() => {
-                try {
-                    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    setClient(sb);
-                } catch (e) { console.error(e); }
-            }, []);
-
-            useEffect(() => {
-                if (client) fetchTrades();
-            }, [client]);
+            useEffect(() => { fetchTrades(); }, []);
 
             async function fetchTrades() {
-                const { data } = await client.from('trades').select('*').order('created_at', { ascending: false });
-                if (data) setTrades(data);
-            }
-
-            async function saveTrade() {
-                if(!entry || !sl) return alert("Fill Entry and SL");
                 setLoading(true);
-                const { error } = await client.from('trades').insert([{
-                    entry_price: parseFloat(entry),
-                    stop_loss: parseFloat(sl),
-                    tp_level: parseFloat(tp) || 0,
-                    outcome: outcome,
-                    session: session,
-                    pair: 'XAUUSD'
-                }]);
-                if (!error) {
-                    setEntry(''); setSl(''); setTp('');
-                    await fetchTrades();
-                    setView('log');
-                } else { alert(error.message); }
+                const { data, error } = await supabaseClient.from('trades').select('*').order('created_at', { ascending: false });
+                if (data) setTrades(data);
                 setLoading(false);
             }
 
-            if (!SUPABASE_URL.startsWith('http')) {
-                return <div className="p-10 text-center text-red-500 font-bold">Error: Paste your Supabase URL in the code!</div>;
+            async function handleSubmit() {
+                if (!form.entry || !form.sl || !form.pnl) return alert("Fill Entry, SL, and PnL");
+                setSaved(true);
+                
+                const { error } = await supabaseClient.from('trades').insert([{
+                    ...form,
+                    entry: parseFloat(form.entry),
+                    sl: parseFloat(form.sl),
+                    pnl: parseFloat(form.pnl),
+                    pair: 'XAUUSD'
+                }]);
+
+                if (!error) {
+                    setForm(initialForm);
+                    await fetchTrades();
+                    setView("journal");
+                } else {
+                    alert("Error: " + error.message);
+                }
+                setSaved(false);
             }
 
-            return (
-                <div className="max-w-md mx-auto p-4 min-h-screen">
-                    <header className="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-                        <div>
-                            <p className="text-[10px] gold-text tracking-[0.2em]">XAUUSD</p>
-                            <h1 className="font-bold text-xl text-white tracking-tighter">TOXIKWICK</h1>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => setView('log')} className={`text-[10px] px-3 py-1 border ${view === 'log' ? 'gold-bg text-black font-bold' : 'border-yellow-600 gold-text'}`}>LOG</button>
-                            <button onClick={() => setView('add')} className={`text-[10px] px-3 py-1 border ${view === 'add' ? 'gold-bg text-black font-bold' : 'border-yellow-600 gold-text'}`}>+ ADD</button>
-                        </div>
-                    </header>
+            const toggleConfluence = (c) => {
+                setForm(f => ({
+                    ...f,
+                    confluences: f.confluences.includes(c) 
+                        ? f.confluences.filter(x => x !== c) 
+                        : [...f.confluences, c]
+                }));
+            };
 
-                    {view === 'log' ? (
-                        <div className="space-y-3">
-                            {trades.length === 0 ? (
-                                <div className="text-center opacity-30 mt-20 uppercase text-[10px] tracking-widest">No trades found</div>
-                            ) : (
-                                trades.map(t => (
-                                    <div key={t.id} className="bg-gray-900 p-4 border-l-2 border-yellow-500 flex justify-between items-center">
-                                        <div>
-                                            <p className="text-[10px] gold-text">{t.session} SESSION</p>
-                                            <p className="text-sm font-bold">Entry: {t.entry_price}</p>
-                                        </div>
-                                        <span className={`text-[10px] font-bold px-2 py-1 rounded ${t.outcome === 'WIN' ? 'bg-green-900 text-green-400' : t.outcome === 'LOSS' ? 'bg-red-900 text-red-400' : 'bg-gray-800 text-yellow-500'}`}>
-                                            {t.outcome}
-                                        </span>
-                                    </div>
-                                ))
-                            )}
+            // Stats Logic
+            const stats = {
+                total: trades.length,
+                wins: trades.filter(t => t.outcome === "WIN").length,
+                winRate: trades.length ? Math.round((trades.filter(t => t.outcome === "WIN").length / trades.length) * 100) : 0,
+                totalPnl: trades.reduce((sum, t) => sum + (parseFloat(t.pnl) || 0), 0).toFixed(2)
+            };
+
+            return (
+                <div style={{ minHeight: "100vh", background: "#0a0a0f", fontFamily: "monospace", color: "#e0e0e0" }}>
+                    {/* Header */}
+                    <div style={{ borderBottom: "1px solid #ffd700", padding: "15px", display: "flex", justifyContent: "space-between", background: "#0d1117" }}>
+                        <div>
+                            <div style={{ color: "#ffd700", fontSize: "10px", letterSpacing: "2px" }}>XAUUSD</div>
+                            <div style={{ fontWeight: "bold" }}>TOXIKWICK</div>
                         </div>
-                    ) : (
-                        <div className="space-y-5">
+                        <div style={{ display: "flex", gap: "5px" }}>
+                            <button onClick={() => setView('journal')} style={{ border: "1px solid #ffd700", padding: "5px 10px", fontSize: "10px", color: view==='journal'?'#000':'#ffd700', background: view==='journal'?'#ffd700':'transparent' }}>LOG</button>
+                            <button onClick={() => setView('add')} style={{ border: "1px solid #ffd700", padding: "5px 10px", fontSize: "10px", color: view==='add'?'#000':'#ffd700', background: view==='add'?'#ffd700':'transparent' }}>+ ADD</button>
+                            <button onClick={() => setView('stats')} style={{ border: "1px solid #ffd700", padding: "5px 10px", fontSize: "10px", color: view==='stats'?'#000':'#ffd700', background: view==='stats'?'#ffd700':'transparent' }}>STATS</button>
+                        </div>
+                    </div>
+
+                    <div style={{ padding: "20px", maxWidth: "500px", margin: "0 auto" }}>
+                        {view === "add" && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                                <div style={{ fontSize: "10px", color: "#ffd700" }}>NEW TRADE ENTRY</div>
+                                <input type="number" placeholder="ENTRY" value={form.entry} onChange={e => setForm({...form, entry: e.target.value})} style={{ background: "#161b22", border: "1px solid #30363d", padding: "10px", color: "white" }}/>
+                                <input type="number" placeholder="SL" value={form.sl} onChange={e => setForm({...form, sl: e.target.value})} style={{ background: "#161b22", border: "1px solid #30363d", padding: "10px", color: "white" }}/>
+                                <input type="number" placeholder="PNL (USD)" value={form.pnl} onChange={e => setForm({...form, pnl: e.target.value})} style={{ background: "#161b22", border: "1px solid #30363d", padding: "10px", color: "#00ff87" }}/>
+                                
+                                <div style={{ fontSize: "10px", color: "#888" }}>CONFLUENCES</div>
+                                {CONFLUENCES.map(c => (
+                                    <button key={c} onClick={() => toggleConfluence(c)} style={{ textAlign: "left", fontSize: "10px", padding: "8px", border: "1px solid #30363d", background: form.confluences.includes(c) ? "#1a2a1a" : "transparent", color: form.confluences.includes(c) ? "#00ff87" : "#888" }}>
+                                        {form.confluences.includes(c) ? "✓ " : "○ "}{c}
+                                    </button>
+                                ))}
+
+                                <button onClick={handleSubmit} style={{ background: "#ffd700", color: "#000", padding: "15px", fontWeight: "bold", marginTop: "10px" }}>
+                                    {saved ? "SAVING..." : "CONFIRM LOG"}
+                                </button>
+                            </div>
+                        )}
+
+                        {view === "journal" && (
                             <div>
-                                <label className="text-[10px] gold-text block mb-1">SESSION</label>
-                                <div className="flex gap-2">
-                                    {['NY', 'Asia', 'London'].map(s => (
-                                        <button key={s} onClick={() => setSession(s)} className={`flex-1 py-2 text-[10px] border ${session === s ? 'gold-bg text-black font-bold' : 'border-gray-700'}`}>{s}</button>
-                                    ))}
+                                {trades.map(t => (
+                                    <div key={t.id} style={{ background: "#0d1117", padding: "15px", marginBottom: "10px", borderLeft: `4px solid ${t.outcome === 'WIN' ? '#00ff87' : '#ff4757'}` }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                            <span style={{ fontSize: "12px", fontWeight: "bold" }}>{t.direction} XAUUSD</span>
+                                            <span style={{ color: t.pnl >= 0 ? "#00ff87" : "#ff4757" }}>${t.pnl}</span>
+                                        </div>
+                                        <div style={{ fontSize: "10px", color: "#888", marginTop: "5px" }}>{t.date} | {t.session} Session</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {view === "stats" && (
+                            <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: "40px", color: "#ffd700", fontWeight: "bold" }}>{stats.winRate}%</div>
+                                <div style={{ fontSize: "10px", color: "#888", letterSpacing: "2px" }}>TOTAL WIN RATE</div>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "20px" }}>
+                                    <div style={{ background: "#0d1117", padding: "15px" }}>
+                                        <div style={{ fontSize: "20px" }}>{stats.total}</div>
+                                        <div style={{ fontSize: "8px", color: "#555" }}>TRADES</div>
+                                    </div>
+                                    <div style={{ background: "#0d1117", padding: "15px" }}>
+                                        <div style={{ fontSize: "20px", color: "#00ff87" }}>${stats.totalPnl}</div>
+                                        <div style={{ fontSize: "8px", color: "#555" }}>TOTAL P&L</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <label className="text-[10px] gold-text block mb-1">ENTRY PRICE</label>
-                                <input type="number" step="0.001" value={entry} onChange={e => setEntry(e.target.value)} placeholder="0.000" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="text-[10px] gold-text block mb-1">STOP LOSS</label><input type="number" step="0.001" value={sl} onChange={e => setSl(e.target.value)} /></div>
-                                <div><label className="text-[10px] gold-text block mb-1">TAKE PROFIT</label><input type="number" step="0.001" value={tp} onChange={e => setTp(e.target.value)} /></div>
-                            </div>
-                            <div>
-                                <label className="text-[10px] gold-text block mb-1">OUTCOME</label>
-                                <select value={outcome} onChange={e => setOutcome(e.target.value)}>
-                                    <option value="WIN">WIN</option>
-                                    <option value="LOSS">LOSS</option>
-                                    <option value="BE">BREAKEVEN</option>
-                                </select>
-                            </div>
-                            <button onClick={saveTrade} disabled={loading} className="w-full gold-bg text-black font-bold py-4 rounded uppercase tracking-[0.2em]">
-                                {loading ? 'Logging...' : 'Secure Trade Log'}
-                            </button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             );
         }
