@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Plus, BookOpen } from 'lucide-react';
 
 const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  "https://pewkiwknniphfwhnoxsv.supabase.co", 
+  "sb_publishable_l4PTYKlCiPoVGkQZj0loWQ_JMHGkGd3"
 );
 
 export default function App() {
