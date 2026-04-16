@@ -1,62 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
-import { Plus, BookOpen } from 'lucide-react';
+import { TrendingUp, Plus } from 'lucide-react';
 
-const supabase = createClient(
-  "https://pewkiwknniphfwhnoxsv.supabase.co", 
-  "sb_publishable_l4PTYKlCiPoVGkQZj0loWQ_JMHGkGd3"
-);
+// Hardcoded for testing - Replace with your actual keys if they are different
+const supabaseUrl = 'YOUR_SUPABASE_URL';
+const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export default function App() {
-  const [view, setView] = useState('log');
-  const [trades, setTrades] = useState([]);
-
-  useEffect(() => {
-    fetchTrades();
-  }, []);
-
-  async function fetchTrades() {
-    const { data } = await supabase.from('trades').select('*').order('created_at', { ascending: false });
-    if (data) setTrades(data);
-  }
-
+function App() {
   return (
-    <div style={{ backgroundColor: '#111', color: '#fff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
-      <div style={{ padding: '20px', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0, color: '#f3ba2f', fontSize: '24px' }}>ToxikWick</h1>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <BookOpen onClick={() => setView('log')} style={{ cursor: 'pointer', color: view === 'log' ? '#f3ba2f' : '#888' }} />
-          <Plus onClick={() => setView('add')} style={{ cursor: 'pointer', color: view === 'add' ? '#f3ba2f' : '#888' }} />
-        </div>
-      </div>
-
-      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-        {view === 'log' ? (
-          <div>
-            <h2 style={{ fontSize: '18px', marginBottom: '20px' }}>Trade Vault</h2>
-            {trades.length === 0 ? (
-              <p style={{ color: '#666' }}>No trades recorded yet, Isaiah.</p>
-            ) : (
-              trades.map((t) => (
-                <div key={t.id} style={{ backgroundColor: '#222', padding: '15px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid #f3ba2f' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 'bold' }}>XAUUSD {t.direction}</span>
-                    <span>{t.pnl}</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div>
-            <h2 style={{ fontSize: '18px' }}>Add New Wick</h2>
-            <p style={{ color: '#888' }}>Database is connected. Ready to log trades.</p>
-            <button onClick={() => setView('log')} style={{ padding: '10px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '5px', marginTop: '20px' }}>
-              Back to Logs
-            </button>
-          </div>
-        )}
-      </div>
+    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
+      <header style={{ borderBottom: '1px solid #333', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ color: '#fbbf24', margin: 0 }}>TOXIKWICK JOURNAL</h1>
+        <TrendingUp size={24} color="#fbbf24" />
+      </header>
+      
+      <main style={{ marginTop: '40px', textAlign: 'center' }}>
+        <p>Your trading journal is online.</p>
+        <button style={{ backgroundColor: '#fbbf24', border: 'none', padding: '10px 20px', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>
+          <Plus size={16} style={{ marginRight: '5px' }} /> Log New Trade
+        </button>
+      </main>
     </div>
   );
 }
+
+// THIS PART IS CRITICAL: It connects the React code to the <div id="root"> in your HTML
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+export default App;
