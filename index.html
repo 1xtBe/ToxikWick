@@ -1642,16 +1642,18 @@ const DEFAULT_RULES=[
   {id:"r7",cat:"session",rule:"Asia session: give trade more room before moving SL, manipulation happens before continuation",why:"Asia moves slowly with fake moves before real direction"},
 ];
 
-function loadRules(){
-  try{
-    const saved=localStorage.getItem('tw_rules_'+(CU?CU.id:'guest'));
-    if(saved){rulesData=JSON.parse(saved);}
-    else{rulesData=[...DEFAULT_RULES];saveRulesLocal();}
-  }catch(e){rulesData=[...DEFAULT_RULES];}
+async function loadRules(){
+  const{data,error}=await DB.from('rules').select('*','user_id=eq.'+CU.id+'&order=created_at.asc');
+  if(error||!data||!data.length){
+    // Seed defaults if no rules exist yet
+    rulesData=[...DEFAULT_RULES];
+    for(const r of DEFAULT_RULES){
+      await DB.from('rules').insert({id:r.id,user_id:CU.id,cat:r.cat,rule:r.rule,why:r.why||''});
+    }
+  } else {
+    rulesData=data.map(function(r){return{id:r.id,cat:r.cat,rule:r.rule,why:r.why||'',created:r.created_at}});
+  }
   renderRules();
-}
-function saveRulesLocal(){
-  try{localStorage.setItem('tw_rules_'+(CU?CU.id:'guest'),JSON.stringify(rulesData));}catch(e){}
 }
 
 document.getElementById('rule-cats').addEventListener('click',function(e){
@@ -1683,7 +1685,9 @@ function renderRules(){
 function ruleCard(r){
   var col=CAT_COLORS[r.cat]||"#C9A84C";
   var mb=r.why?"6px":"0";
-  var why=r.why?"<div style=\"font-size:11px;color:#555;font-style:italic;border-left:2px solid #1C1C1C;padding-left:8px\">"+r.why.replace(/\n/g,'<br>')+"</div>":"";
+  var ruleHtml=r.rule.replace(/\n/g,'<br>');
+  var whyHtml=r.why?r.why.replace(/\n/g,'<br>'):'';
+  var why=whyHtml?"<div style=\"font-size:11px;color:#555;font-style:italic;border-left:2px solid #1C1C1C;padding-left:8px;line-height:1.7\">"+whyHtml+"</div>":"";
   var html="<div style=\"background:#0E0E0E;border:1px solid #1C1C1C;border-radius:10px;padding:13px 14px;margin-bottom:7px\">";
   html+="<div style=\"display:flex;justify-content:space-between;align-items:flex-start;gap:8px\">";
   html+="<div style=\"flex:1\">";
@@ -1691,7 +1695,7 @@ function ruleCard(r){
   html+="<span style=\"width:6px;height:6px;border-radius:50%;background:"+col+";flex-shrink:0;display:inline-block\"></span>";
   html+="<span style=\"font-size:9px;color:"+col+";font-family:DM Mono,monospace;font-weight:700;text-transform:uppercase;letter-spacing:.1em\">"+CAT_LABELS[r.cat]+"</span>";
   html+="</div>";
-  html+="<div style=\"font-size:13px;font-weight:600;line-height:1.6;margin-bottom:"+mb+"\">"+r.rule.replace(/\n/g,'<br>')+"</div>";
+  html+="<div style=\"font-size:13px;font-weight:600;line-height:1.7;margin-bottom:"+mb+"\">"+ruleHtml+"</div>";
   html+=why;
   html+="</div>";
   html+="<div style=\"display:flex;flex-direction:column;gap:5px;flex-shrink:0\">";
@@ -1720,25 +1724,35 @@ window.editRule=function(id){
   document.getElementById('rule-save-btn').textContent='UPDATE RULE';
   openModal('m-rule');
 };
-window.saveRule=function(){
-  const text=document.getElementById('rule-text').value.trim();
-  if(!text){flash('err','Rule text is required.');return}
+window.saveRule=async function(){
+  const text=document.getElementById('rule-text').value;
+  if(!text.trim()){flash('err','Rule text is required.');return}
   const cat=document.getElementById('rule-cat').value;
-  const why=document.getElementById('rule-why').value.trim();
+  const why=document.getElementById('rule-why').value;
   const editId=document.getElementById('rule-edit-id').value;
+  const btn=document.getElementById('rule-save-btn');
+  btn.disabled=true;btn.textContent='SAVING...';
   if(editId){
+    const{error}=await DB.from('rules').update({cat:cat,rule:text,why:why},'id=eq.'+editId+'&user_id=eq.'+CU.id);
+    if(error){flash('err','Save failed: '+error.message);btn.disabled=false;btn.textContent='UPDATE RULE';return;}
     const idx=rulesData.findIndex(function(x){return x.id===editId});
     if(idx>-1)rulesData[idx]=Object.assign({},rulesData[idx],{rule:text,cat:cat,why:why});
   } else {
-    rulesData.push({id:'r'+Date.now(),cat:cat,rule:text,why:why,created:new Date().toISOString()});
+    const newId='r'+Date.now();
+    const{error}=await DB.from('rules').insert({id:newId,user_id:CU.id,cat:cat,rule:text,why:why});
+    if(error){flash('err','Save failed: '+error.message);btn.disabled=false;btn.textContent='SAVE RULE';return;}
+    rulesData.push({id:newId,cat:cat,rule:text,why:why,created:new Date().toISOString()});
   }
-  saveRulesLocal();renderRules();closeModal('m-rule');
+  renderRules();closeModal('m-rule');
   flash('ok',editId?'Rule updated!':'Rule added!');
+  btn.disabled=false;btn.textContent=editId?'UPDATE RULE':'SAVE RULE';
 };
-window.deleteRule=function(id){
+window.deleteRule=async function(id){
   if(!confirm('Delete this rule?'))return;
+  const{error}=await DB.from('rules').delete('id=eq.'+id+'&user_id=eq.'+CU.id);
+  if(error){flash('err','Delete failed.');return;}
   rulesData=rulesData.filter(function(r){return r.id!==id});
-  saveRulesLocal();renderRules();
+  renderRules();
 };
 
 </script>
