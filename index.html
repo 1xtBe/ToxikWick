@@ -1683,7 +1683,7 @@ function renderRules(){
 function ruleCard(r){
   var col=CAT_COLORS[r.cat]||"#C9A84C";
   var mb=r.why?"6px":"0";
-  var why=r.why?"<div style=\"font-size:11px;color:#555;font-style:italic;border-left:2px solid #1C1C1C;padding-left:8px;white-space:pre-wrap\">"+r.why+"</div>":"";
+  var why=r.why?"<div style=\"font-size:11px;color:#555;font-style:italic;border-left:2px solid #1C1C1C;padding-left:8px\">"+r.why.replace(/\n/g,'<br>')+"</div>":"";
   var html="<div style=\"background:#0E0E0E;border:1px solid #1C1C1C;border-radius:10px;padding:13px 14px;margin-bottom:7px\">";
   html+="<div style=\"display:flex;justify-content:space-between;align-items:flex-start;gap:8px\">";
   html+="<div style=\"flex:1\">";
@@ -1691,7 +1691,7 @@ function ruleCard(r){
   html+="<span style=\"width:6px;height:6px;border-radius:50%;background:"+col+";flex-shrink:0;display:inline-block\"></span>";
   html+="<span style=\"font-size:9px;color:"+col+";font-family:DM Mono,monospace;font-weight:700;text-transform:uppercase;letter-spacing:.1em\">"+CAT_LABELS[r.cat]+"</span>";
   html+="</div>";
-  html+="<div style=\"font-size:13px;font-weight:600;line-height:1.6;margin-bottom:"+mb+";white-space:pre-wrap\">"+r.rule+"</div>";
+  html+="<div style=\"font-size:13px;font-weight:600;line-height:1.6;margin-bottom:"+mb+"\">"+r.rule.replace(/\n/g,'<br>')+"</div>";
   html+=why;
   html+="</div>";
   html+="<div style=\"display:flex;flex-direction:column;gap:5px;flex-shrink:0\">";
