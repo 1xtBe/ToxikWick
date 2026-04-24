@@ -190,6 +190,25 @@ select option{background:#181818;color:#E2DDD6}
 .ebtn.on{background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.4);color:#E8C97A;font-weight:600}
 .dur-tag{font-size:9px;font-family:'DM Mono',monospace;color:#555;background:#131313;border:1px solid #1C1C1C;border-radius:3px;padding:1px 5px;margin-left:5px}
 
+
+/* EMOTION HIERARCHY BUTTONS */
+.ebtn.e-top{color:#2DB87C;border-color:rgba(45,184,124,.25)}
+.ebtn.e-top.on{background:rgba(45,184,124,.14);border-color:#2DB87C;color:#2DB87C;font-weight:700}
+.ebtn.e-good{color:#5EC48E;border-color:rgba(94,196,142,.2)}
+.ebtn.e-good.on{background:rgba(94,196,142,.12);border-color:#5EC48E;color:#5EC48E;font-weight:700}
+.ebtn.e-mid{color:#777;border-color:#1E1E1E}
+.ebtn.e-mid.on{background:#181818;border-color:#2A2A2A;color:#E2DDD6;font-weight:700}
+.ebtn.e-warn{color:#C9A84C;border-color:rgba(201,168,76,.25)}
+.ebtn.e-warn.on{background:rgba(201,168,76,.12);border-color:#C9A84C;color:#C9A84C;font-weight:700}
+.ebtn.e-orange{color:#D4916A;border-color:rgba(212,145,106,.25)}
+.ebtn.e-orange.on{background:rgba(212,145,106,.12);border-color:#D4916A;color:#D4916A;font-weight:700}
+.ebtn.e-bad{color:#E05252;border-color:rgba(224,82,82,.25)}
+.ebtn.e-bad.on{background:rgba(224,82,82,.14);border-color:#E05252;color:#E05252;font-weight:700}
+/* DISCIPLINE STARS */
+.dstar{font-size:22px;cursor:pointer;transition:color .1s;user-select:none;line-height:1;color:#222}
+/* QUICK LOG FAB */
+.ql-fab{position:fixed;bottom:22px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#C9A84C,#E8C97A);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:20px;z-index:150;box-shadow:0 4px 18px rgba(201,168,76,.35);font-weight:900;color:#000;line-height:1}
+
 @media(max-width:400px){.g4{grid-template-columns:repeat(2,1fr)}.sval-lg{font-size:22px}.nbtn{padding:4px 8px;font-size:10px}}
 </style>
 </head>
@@ -406,14 +425,14 @@ select option{background:#181818;color:#E2DDD6}
         </div>
         <div class="fld" style="margin-bottom:9px">
           <label>Emotional State</label>
-          <div id="emotion-btns" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px">
-            <button type="button" class="ebtn" data-val="Calm" onclick="selectEmotion(this)">Calm</button>
-            <button type="button" class="ebtn" data-val="Confident" onclick="selectEmotion(this)">Confident</button>
-            <button type="button" class="ebtn" data-val="Anxious" onclick="selectEmotion(this)">Anxious</button>
-            <button type="button" class="ebtn" data-val="Frustrated" onclick="selectEmotion(this)">Frustrated</button>
-            <button type="button" class="ebtn" data-val="FOMO" onclick="selectEmotion(this)">FOMO</button>
-            <button type="button" class="ebtn" data-val="Revenge" onclick="selectEmotion(this)">Revenge</button>
-            <button type="button" class="ebtn" data-val="Neutral" onclick="selectEmotion(this)">Neutral</button>
+          <div style="font-size:8px;color:#333;font-family:'DM Mono',monospace;margin-bottom:6px;letter-spacing:.1em">MINDSET LEVEL — BEST &#9658; WORST</div>
+          <div id="emotion-btns" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:0">
+            <button type="button" class="ebtn e-top" data-val="Locked In" onclick="selectEmotion(this)">Locked In</button>
+            <button type="button" class="ebtn e-good" data-val="Confident" onclick="selectEmotion(this)">Confident</button>
+            <button type="button" class="ebtn e-mid" data-val="Neutral" onclick="selectEmotion(this)">Neutral</button>
+            <button type="button" class="ebtn e-warn" data-val="On Edge" onclick="selectEmotion(this)">On Edge</button>
+            <button type="button" class="ebtn e-orange" data-val="Distracted" onclick="selectEmotion(this)">Distracted</button>
+            <button type="button" class="ebtn e-bad" data-val="Chasing" onclick="selectEmotion(this)">Chasing</button>
           </div>
           <input type="hidden" id="f-emotion" value="">
         </div>
@@ -424,6 +443,17 @@ select option{background:#181818;color:#E2DDD6}
         <div class="fld" id="f-unexec-wrap" style="display:none;margin-bottom:9px">
           <label>Unexecuted <span id="f-unexec-pct" style="color:#E05252"></span> — What specifically?</label>
           <input type="text" id="f-unexec" placeholder="e.g. Entered at candle open instead of waiting for pullback">
+        </div>
+        <div class="fld" style="margin-bottom:10px">
+          <label>Discipline Score — <span id="disc-label" style="color:#C9A84C">5 — Fully disciplined</span></label>
+          <div id="disc-stars" style="display:flex;gap:8px;margin-top:6px">
+            <span class="dstar" data-val="1" onclick="selectDisc(this)">&#9733;</span>
+            <span class="dstar" data-val="2" onclick="selectDisc(this)">&#9733;</span>
+            <span class="dstar" data-val="3" onclick="selectDisc(this)">&#9733;</span>
+            <span class="dstar" data-val="4" onclick="selectDisc(this)">&#9733;</span>
+            <span class="dstar" data-val="5" onclick="selectDisc(this)">&#9733;</span>
+          </div>
+          <input type="hidden" id="f-disc" value="5">
         </div>
         <div class="divider"></div>
         <div class="fld"><label>Notes / Review</label><textarea id="f-notes" rows="3" placeholder="Execution notes, what the market did, psychology..."></textarea></div>
@@ -489,6 +519,18 @@ select option{background:#181818;color:#E2DDD6}
       <div class="card">
         <div class="sec-title">SMC Confluence Impact</div>
         <div id="a-conf">—</div>
+      </div>
+      <div class="card" style="margin-top:7px">
+        <div class="sec-title">🔬 Checklist Heatmap · Win% per Item</div>
+        <div id="a-heatmap"><span class="muted" style="font-size:12px">No data yet</span></div>
+      </div>
+      <div class="card" style="margin-top:7px">
+        <div class="sec-title">⭐ Discipline Score vs Results</div>
+        <div id="a-disc-chart">—</div>
+      </div>
+      <div class="card" style="margin-top:7px">
+        <div class="sec-title">🧠 Mindset Impact</div>
+        <div id="a-emotion">—</div>
       </div>
     </div>
 
@@ -648,8 +690,8 @@ let CU=null,CP=null,trades=[];
 let dPer='today',hPer='daily',aPer='today';
 
 // -- UPDATED CONFLUENCE (6 items) --
-const CKEYS=['smc_presence','liquidity_sweep','sr_level','round_number','rejection_candle','entry_sl_set'];
-const CLBLS=['Smart Money Presence','Liquidity Sweep','S/R Level','Round Number','Rejection Candle Closed','Entry & SL Set'];
+const CKEYS=['smc_presence','liquidity_sweep','sr_level','round_number','rejection_candle','continuation_candle','entry_sl_set'];
+const CLBLS=['Smart Money Presence','Liquidity Sweep','S/R Level','Round Number','Rejection Candle Closed','Continuation Candle Close','Entry & SL Set'];
 
 // -- SCREENS --
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('s-'+id).classList.add('active')}
@@ -728,7 +770,7 @@ async function doRegister(){
 }
 
 // -- LOGOUT --
-async function doLogout(){await signOut();CU=null;CP=null;trades=[];show('auth');closeModal('m-settings');closeModal('m-admin')}
+async function doLogout(){await signOut();CU=null;CP=null;trades=[];show('auth');document.getElementById('ql-fab').style.display='none';closeModal('m-settings');closeModal('m-admin')}
 
 // -- INIT APP --
 async function initApp(user){
@@ -750,6 +792,7 @@ async function initApp(user){
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
   await loadTrades();
   show('app');
+  document.getElementById('ql-fab').style.display='flex';
   renderDash();renderHist();renderStats();renderArchive();loadRules();
 }
 
@@ -798,7 +841,7 @@ function updateConf(){
     const ci=document.getElementById('ci-'+k);
     if(cb&&cb.checked){s++;ci.classList.add('on')}else if(ci)ci.classList.remove('on');
   });
-  document.getElementById('conf-score').textContent=s+'/6';
+  document.getElementById('conf-score').textContent=s+'/7';
 }
 
 // -- DURATION CALC --
@@ -836,6 +879,21 @@ function autoCalc(){
 document.getElementById('f-etime').addEventListener('input',autoCalc);
 document.getElementById('f-xtime').addEventListener('input',autoCalc);
 
+
+// -- DISCIPLINE STAR SELECTOR --
+const DISC_LBLS={1:'Broke all rules',2:'Struggled to follow plan',3:'Mostly on plan',4:'Strong execution',5:'Fully disciplined'};
+window.selectDisc=function(star){
+  const val=parseInt(star.getAttribute('data-val'));
+  document.getElementById('f-disc').value=val;
+  document.getElementById('disc-label').textContent=val+' — '+DISC_LBLS[val];
+  document.querySelectorAll('#disc-stars .dstar').forEach((s,i)=>{s.style.color=i<val?'#C9A84C':'#222'});
+};
+window.selectEditDisc=function(star){
+  const val=parseInt(star.getAttribute('data-val'));
+  document.getElementById('e-disc').value=val;
+  document.getElementById('e-disc-label').textContent=val+' — '+DISC_LBLS[val];
+  document.querySelectorAll('#e-disc-stars .dstar').forEach((s,i)=>{s.style.color=i<val?'#C9A84C':'#222'});
+};
 // -- EMOTION SELECTOR --
 window.selectEmotion=function(btn){
   document.querySelectorAll('#emotion-btns .ebtn').forEach(b=>b.classList.remove('on'));
@@ -864,19 +922,20 @@ window.updateEditExecSlider=function(){
 };
 
 // Meta tag helpers
-function buildMetaTag(setupId,entryNum,emotion,exec,unexec){
+function buildMetaTag(setupId,entryNum,emotion,exec,unexec,disc){
   const parts=[];
   if(setupId)parts.push('setup='+setupId);
   if(entryNum)parts.push('entry='+entryNum);
   if(emotion)parts.push('emotion='+emotion);
   parts.push('exec='+exec+'%');
   if(exec<100&&unexec)parts.push('unexec='+unexec);
+  if(disc&&disc!==5)parts.push('disc='+disc);
   return '{'+parts.join('|')+'}';
 }
 function parseMetaTag(notes){
   const m=(notes||'').match(/\{([^}]+)\}/);
   if(!m)return{setupId:'',entryNum:'1',emotion:'',exec:100,unexec:''};
-  const obj={setupId:'',entryNum:'1',emotion:'',exec:100,unexec:''};
+  const obj={setupId:'',entryNum:'1',emotion:'',exec:100,unexec:'',disc:5};
   m[1].split('|').forEach(p=>{
     const[k,v]=p.split('=');
     if(k==='setup')obj.setupId=v||'';
@@ -884,6 +943,7 @@ function parseMetaTag(notes){
     if(k==='emotion')obj.emotion=v||'';
     if(k==='exec')obj.exec=parseInt(v)||100;
     if(k==='unexec')obj.unexec=v||'';
+    if(k==='disc')obj.disc=parseInt(v)||5;
   });
   return obj;
 }
@@ -914,7 +974,8 @@ async function saveTrade(){
   const emotion=document.getElementById('f-emotion').value;
   const exec=parseInt(document.getElementById('f-exec').value)||100;
   const unexec=exec<100?document.getElementById('f-unexec').value.trim():'';
-  const metaTag=buildMetaTag(setupId,entryNum,emotion,exec,unexec);
+  const disc=parseInt(document.getElementById('f-disc').value)||5;
+  const metaTag=buildMetaTag(setupId,entryNum,emotion,exec,unexec,disc);
   const rawNotes=document.getElementById('f-notes').value.trim();
   const confNote=CKEYS.map((k,i)=>cv[k]?'OK '+CLBLS[i]:null).filter(Boolean).join(', ');
   const confTag=confNote?'\n['+confNote+']':'';
@@ -967,11 +1028,14 @@ function resetForm(){
   document.getElementById('f-exec-lbl').textContent='100%';
   document.getElementById('f-unexec-wrap').style.display='none';
   document.querySelectorAll('#emotion-btns .ebtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('f-disc').value=5;
+  document.querySelectorAll('#disc-stars .dstar').forEach((s,i)=>{s.style.color='#C9A84C'});
+  document.getElementById('disc-label').textContent='5 — Fully disciplined';
   document.getElementById('f-pnl').className='';
   document.getElementById('pnl-hint').textContent='Enter exit price + lots to auto-calculate';
   document.getElementById('dur-preview').style.display='none';
   CKEYS.forEach(k=>{const cb=document.getElementById('cb-'+k);if(cb)cb.checked=false;const ci=document.getElementById('ci-'+k);if(ci)ci.classList.remove('on')});
-  document.getElementById('conf-score').textContent='0/6';
+  document.getElementById('conf-score').textContent='0/7';
 }
 
 // -- DELETE --
@@ -1015,6 +1079,12 @@ window.openEditTrade=function(id){
   // Preserve conf tag
   const confMatch=(t.notes||'').match(/\n?\[[^\]]+\]$/);
   document.getElementById('e-notes').dataset.confTag=confMatch?confMatch[0]:'';
+  // Load discipline score
+  const discVal=meta.disc||5;
+  document.getElementById('e-disc').value=discVal;
+  const discLbls={1:'Broke all rules',2:'Struggled to follow plan',3:'Mostly on plan',4:'Strong execution',5:'Fully disciplined'};
+  document.getElementById('e-disc-label').textContent=discVal+' — '+discLbls[discVal];
+  document.querySelectorAll('#e-disc-stars .dstar').forEach((s,i)=>{s.style.color=i<discVal?'#C9A84C':'#222'});
   openModal('m-edit');
 };
 window.saveEditTrade=async function(){
@@ -1028,7 +1098,8 @@ window.saveEditTrade=async function(){
   const emotion=document.getElementById('e-emotion').value;
   const exec=parseInt(document.getElementById('e-exec').value)||100;
   const unexec=exec<100?document.getElementById('e-unexec').value.trim():'';
-  const metaTag=buildMetaTag(setupId,entryNum,emotion,exec,unexec);
+  const disc=parseInt(document.getElementById('e-disc').value)||5;
+  const metaTag=buildMetaTag(setupId,entryNum,emotion,exec,unexec,disc);
   const notes=metaTag+(rawNotes?'\n'+rawNotes:'')+confTag;
   const exitP=document.getElementById('e-exit').value;
   const eTime=document.getElementById('e-etime').value;
@@ -1092,6 +1163,10 @@ function fp(v){const n=parseFloat(v)||0;return(n>=0?'+':'-')+'$'+Math.abs(n).toF
 function pc(v){return parseFloat(v)>=0?'#2DB87C':'#E05252'}
 function wc(wr){return wr>=70?'#2DB87C':wr>=50?'#C9A84C':'#E05252'}
 function gc(r){return r==='Win'?'#2DB87C':r==='Loss'?'#E05252':'#C9A84C'}
+function emotionColor(e){const m={'Locked In':'#2DB87C','Confident':'#5EC48E','Neutral':'#555','On Edge':'#C9A84C','Distracted':'#D4916A','Chasing':'#E05252'};return m[e]||'#555'}
+function sessChip(s){const c=s==='NY'?'#C9A84C':'#5B9BD4';const b=s==='NY'?'rgba(201,168,76,.1)':'rgba(91,155,212,.1)';const br=s==='NY'?'rgba(201,168,76,.25)':'rgba(91,155,212,.25)';return'<span style="font-size:9px;padding:2px 7px;border-radius:3px;background:'+b+';color:'+c+';border:1px solid '+br+';font-family:DM Mono,monospace;font-weight:700">'+s+'</span>'}
+function dirChip(d){const c=d==='Long'?'#2DB87C':'#E05252';const b=d==='Long'?'rgba(45,184,124,.08)':'rgba(224,82,82,.08)';return'<span style="font-size:9px;padding:2px 7px;border-radius:3px;background:'+b+';color:'+c+';border:1px solid '+c+'33;font-family:DM Mono,monospace;font-weight:700">'+d.toUpperCase()+'</span>'}
+function discStars(d){if(!d)return'';return Array.from({length:5},(_,i)=>'<span style="color:'+(i<d?'#C9A84C':'#252525')+'">&#9733;</span>').join('')}
 function dots(s,max){max=max||6;let h='<div class="sdots">';for(let i=1;i<=max;i++)h+='<div class="dot" style="background:'+(i<=s?'#C9A84C':'#1C1C1C')+'"></div>';return h+'</div>'}
 function setEl(id,txt,col){const e=document.getElementById(id);if(!e)return;e.textContent=txt;if(col)e.style.color=col}
 function flash(type,msg){const id=type==='err'?'ferr':'fok';document.getElementById(id+'-m').textContent=msg;const el=document.getElementById(id);el.classList.add('show');setTimeout(()=>el.classList.remove('show'),4000)}
@@ -1194,14 +1269,15 @@ function tradeCard(t){
   const metaRow='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px">'+
     (meta.setupId?'<span style="font-size:9px;padding:2px 8px;border-radius:3px;background:rgba(201,168,76,.08);color:#C9A84C;border:1px solid rgba(201,168,76,.2);font-family:DM Mono,monospace">#'+meta.setupId+'</span>':'')+
     '<span style="font-size:9px;padding:2px 8px;border-radius:3px;background:#111;color:#555;border:1px solid #1C1C1C;font-family:DM Mono,monospace">Entry '+meta.entryNum+'</span>'+
-    (meta.emotion?'<span style="font-size:9px;padding:2px 8px;border-radius:3px;background:#111;color:#777;border:1px solid #1C1C1C">🧠 '+meta.emotion+'</span>':'')+
+    (meta.emotion?'<span style="font-size:9px;padding:2px 8px;border-radius:3px;background:#111;color:'+emotionColor(meta.emotion)+';border:1px solid #1E1E1E">🧠 '+meta.emotion+'</span>':'')+
+    (meta.disc&&meta.disc!==5?'<span style="font-size:9px;padding:2px 8px;border-radius:3px;background:#111;border:1px solid #1C1C1C">'+discStars(meta.disc)+'</span>':'')+
     '<span style="font-size:9px;padding:2px 8px;border-radius:3px;background:'+(meta.exec>=80?'rgba(45,184,124,.07)':meta.exec>=60?'rgba(201,168,76,.07)':'rgba(224,82,82,.07)')+';color:'+(meta.exec>=80?'#2DB87C':meta.exec>=60?'#C9A84C':'#E05252')+';border:1px solid '+(meta.exec>=80?'rgba(45,184,124,.2)':meta.exec>=60?'rgba(201,168,76,.2)':'rgba(224,82,82,.2)')+';font-family:DM Mono,monospace">⚡ '+meta.exec+'% exec</span>'+
     '</div>'+
     (meta.exec<100&&meta.unexec?'<div style="font-size:10px;color:#555;background:rgba(224,82,82,.04);border:1px solid rgba(224,82,82,.1);border-radius:5px;padding:5px 9px;margin-bottom:7px"><span style="color:#E05252;font-weight:600">Unexecuted '+(100-meta.exec)+'%:</span> '+meta.unexec+'</div>':'');
-  return '<div class="hcard"><div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+  return '<div class="hcard" style="border-left:3px solid '+col+'33"><div style="display:flex;justify-content:space-between;align-items:flex-start">'+
     '<div style="flex:1">'+
-    '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+t.trade_date+
-    '<span style="color:#333;font-weight:400;margin-left:7px;font-size:11px">'+t.session+' · '+t.timeframe+' · '+t.direction+lot+'</span>'+durTag+'</div>'+
+    '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:5px">'+sessChip(t.session)+dirChip(t.direction)+'<span style="font-size:9px;color:#2A2A2A;font-family:DM Mono,monospace">'+t.timeframe+lot+'</span>'+durTag+'</div>'+
+    '<div style="font-weight:600;font-size:12px;color:#777;margin-bottom:3px">'+t.trade_date+'</div>'+
     tim+priceGrid+metaRow+
     (formattedNotes?'<div class="hnote">'+formattedNotes+'</div>':'')+
     confBadges+
@@ -1372,8 +1448,76 @@ function renderStats(){
   // Confluence impact
   const cg={};f.forEach(t=>{const sc=t.confluence_score||0;if(!cg[sc])cg[sc]={tot:0,w:0,pnl:0};cg[sc].tot++;if(t.result==='Win')cg[sc].w++;cg[sc].pnl+=parseFloat(t.pnl)||0});
   document.getElementById('a-conf').innerHTML=Object.entries(cg).sort((a,b)=>Number(b[0])-Number(a[0])).map(([sc,d])=>
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #181818">'+dots(Number(sc),6)+'<div style="font-size:10px;font-family:DM Mono,monospace;color:#555">'+d.tot+'T &middot; '+(d.tot?(d.w/d.tot*100).toFixed(0):'-')+'% &middot; <span style="color:'+pc(d.pnl)+'">'+fp(d.pnl)+'</span></div></div>'
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #181818">'+dots(Number(sc),7)+'<div style="font-size:10px;font-family:DM Mono,monospace;color:#555">'+d.tot+'T &middot; '+(d.tot?(d.w/d.tot*100).toFixed(0):'-')+'% &middot; <span style="color:'+pc(d.pnl)+'">'+fp(d.pnl)+'</span></div></div>'
   ).join('')||'-';
+  // Checklist heatmap
+  const hmap=CLBLS.map(lbl=>{
+    const key='OK '+lbl;
+    const chk=f.filter(t=>(t.notes||'').includes(key));
+    const uchk=f.filter(t=>!(t.notes||'').includes(key));
+    const cwr=chk.length?(chk.filter(t=>t.result==='Win').length/chk.length*100):null;
+    const uwr=uchk.length?(uchk.filter(t=>t.result==='Win').length/uchk.length*100):null;
+    return{lbl,chk:chk.length,uchk:uchk.length,cwr,uwr};
+  });
+  const hmEl=document.getElementById('a-heatmap');
+  if(hmEl){
+    if(!f.length){hmEl.innerHTML='<span class="muted" style="font-size:12px">No data yet</span>';}
+    else{hmEl.innerHTML=hmap.map(item=>{
+      const pct=item.cwr||0;const col=pct>=70?'#2DB87C':pct>=50?'#C9A84C':'#E05252';
+      const wr=item.cwr!==null?pct.toFixed(0)+'%':'—';
+      const uwr=item.uwr!==null?item.uwr.toFixed(0)+'%':'—';
+      const improvement=item.cwr!==null&&item.uwr!==null?(item.cwr-item.uwr):null;
+      const impStr=improvement!==null?'<span style="color:'+(improvement>0?'#2DB87C':improvement<0?'#E05252':'#555')+';font-weight:700">'+(improvement>0?'+':'')+improvement.toFixed(0)+'%</span>':'';
+      return'<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'+
+        '<span style="font-size:11px;color:#666">'+item.lbl+'</span>'+
+        '<div style="font-size:10px;font-family:DM Mono,monospace;display:flex;gap:8px;align-items:center">'+
+        '<span style="color:#444">✓ '+item.chk+'T</span>'+
+        '<span style="color:'+col+';font-weight:700">'+wr+'</span>'+
+        (impStr?'<span style="color:#333">vs</span>'+impStr:'')+'</div></div>'+
+        '<div style="background:#131313;border-radius:99px;height:5px;overflow:hidden">'+
+        '<div style="width:'+pct+'%;height:100%;border-radius:99px;background:linear-gradient(90deg,'+col+'77,'+col+');transition:width .5s"></div></div></div>';
+    }).join('');}
+  }
+  // Discipline analytics
+  const discEl=document.getElementById('a-disc-chart');
+  if(discEl){
+    const discTrades=f.filter(t=>parseMetaTag(t.notes).disc!==undefined);
+    if(!discTrades.length){discEl.innerHTML='<span class="muted" style="font-size:12px">Log trades with discipline score to see data</span>';}
+    else{
+      const byScore={1:[],2:[],3:[],4:[],5:[]};
+      discTrades.forEach(t=>{const d=parseMetaTag(t.notes).disc||5;if(byScore[d])byScore[d].push(t)});
+      const lbls={1:'Broke rules',2:'Struggled',3:'Mostly OK',4:'Strong',5:'Locked In'};
+      discEl.innerHTML=Object.entries(byScore).reverse().filter(([_,arr])=>arr.length).map(([sc,arr])=>{
+        const wr=arr.length?(arr.filter(t=>t.result==='Win').length/arr.length*100):0;
+        const pnl=arr.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+        const col=wr>=70?'#2DB87C':wr>=50?'#C9A84C':'#E05252';
+        return'<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #181818">'+
+          '<div><div style="font-size:11px;color:#E2DDD6;font-weight:600">'+discStars(parseInt(sc))+' <span style="color:#555;font-weight:400;font-size:10px">'+lbls[sc]+'</span></div>'+
+          '<div style="font-size:9px;color:#333;font-family:DM Mono,monospace;margin-top:1px">'+arr.length+' trade'+(arr.length!==1?'s':'')+'</div></div>'+
+          '<div style="text-align:right"><div style="font-size:12px;font-weight:700;color:'+col+';font-family:DM Mono,monospace">'+wr.toFixed(0)+'% WR</div>'+
+          '<div style="font-size:10px;color:'+pc(pnl)+';font-family:DM Mono,monospace">'+fp(pnl)+'</div></div></div>';
+      }).join('');
+    }
+  }
+  // Emotion / mindset analytics
+  const emotionEl=document.getElementById('a-emotion');
+  if(emotionEl){
+    const eTrades=f.filter(t=>parseMetaTag(t.notes).emotion);
+    if(!eTrades.length){emotionEl.innerHTML='<span class="muted" style="font-size:12px">No emotion data logged yet</span>';}
+    else{
+      const eMap={};eTrades.forEach(t=>{const e=parseMetaTag(t.notes).emotion;if(!eMap[e])eMap[e]={tot:0,w:0,pnl:0};eMap[e].tot++;if(t.result==='Win')eMap[e].w++;eMap[e].pnl+=parseFloat(t.pnl)||0});
+      const order=['Locked In','Confident','Neutral','On Edge','Distracted','Chasing'];
+      const sorted=order.filter(k=>eMap[k]).concat(Object.keys(eMap).filter(k=>!order.includes(k)));
+      emotionEl.innerHTML=sorted.map(e=>{
+        const d=eMap[e];const wr=d.tot?(d.w/d.tot*100):0;const col=emotionColor(e);const wrCol=wr>=70?'#2DB87C':wr>=50?'#C9A84C':'#E05252';
+        return'<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #181818">'+
+          '<div><span style="font-size:12px;color:'+col+';font-weight:600">'+e+'</span>'+
+          '<span style="font-size:9px;color:#333;font-family:DM Mono,monospace;margin-left:7px">'+d.tot+' trade'+(d.tot!==1?'s':'')+'</span></div>'+
+          '<div style="text-align:right"><div style="font-size:12px;font-weight:700;color:'+wrCol+';font-family:DM Mono,monospace">'+wr.toFixed(0)+'% WR</div>'+
+          '<div style="font-size:10px;color:'+pc(d.pnl)+';font-family:DM Mono,monospace">'+fp(d.pnl)+'</div></div></div>';
+      }).join('');
+    }
+  }
   // Duration by session
   const durMap={};
   f.filter(t=>t.trade_duration&&t.session).forEach(t=>{
@@ -1819,13 +1963,13 @@ window.deleteRule=async function(id){
     <div class="fld" style="margin-bottom:9px">
       <label>Emotional State</label>
       <div id="e-emotion-btns" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px">
-        <button type="button" class="ebtn" data-val="Calm" onclick="selectEditEmotion(this)">Calm</button>
-        <button type="button" class="ebtn" data-val="Confident" onclick="selectEditEmotion(this)">Confident</button>
-        <button type="button" class="ebtn" data-val="Anxious" onclick="selectEditEmotion(this)">Anxious</button>
-        <button type="button" class="ebtn" data-val="Frustrated" onclick="selectEditEmotion(this)">Frustrated</button>
-        <button type="button" class="ebtn" data-val="FOMO" onclick="selectEditEmotion(this)">FOMO</button>
-        <button type="button" class="ebtn" data-val="Revenge" onclick="selectEditEmotion(this)">Revenge</button>
-        <button type="button" class="ebtn" data-val="Neutral" onclick="selectEditEmotion(this)">Neutral</button>
+        <div style="font-size:8px;color:#333;font-family:'DM Mono',monospace;margin-bottom:5px;letter-spacing:.1em">MINDSET LEVEL — BEST &#9658; WORST</div>
+        <button type="button" class="ebtn e-top" data-val="Locked In" onclick="selectEditEmotion(this)">Locked In</button>
+        <button type="button" class="ebtn e-good" data-val="Confident" onclick="selectEditEmotion(this)">Confident</button>
+        <button type="button" class="ebtn e-mid" data-val="Neutral" onclick="selectEditEmotion(this)">Neutral</button>
+        <button type="button" class="ebtn e-warn" data-val="On Edge" onclick="selectEditEmotion(this)">On Edge</button>
+        <button type="button" class="ebtn e-orange" data-val="Distracted" onclick="selectEditEmotion(this)">Distracted</button>
+        <button type="button" class="ebtn e-bad" data-val="Chasing" onclick="selectEditEmotion(this)">Chasing</button>
       </div>
       <input type="hidden" id="e-emotion" value="">
     </div>
@@ -1837,10 +1981,112 @@ window.deleteRule=async function(id){
       <label>Unexecuted <span id="e-unexec-pct" style="color:#E05252"></span> — What specifically?</label>
       <input type="text" id="e-unexec" placeholder="e.g. Entered at candle open instead of waiting">
     </div>
+    <div class="fld" style="margin-bottom:10px">
+      <label>Discipline Score — <span id="e-disc-label" style="color:#C9A84C">5 — Fully disciplined</span></label>
+      <div id="e-disc-stars" style="display:flex;gap:8px;margin-top:6px">
+        <span class="dstar" data-val="1" onclick="selectEditDisc(this)">&#9733;</span>
+        <span class="dstar" data-val="2" onclick="selectEditDisc(this)">&#9733;</span>
+        <span class="dstar" data-val="3" onclick="selectEditDisc(this)">&#9733;</span>
+        <span class="dstar" data-val="4" onclick="selectEditDisc(this)">&#9733;</span>
+        <span class="dstar" data-val="5" onclick="selectEditDisc(this)">&#9733;</span>
+      </div>
+      <input type="hidden" id="e-disc" value="5">
+    </div>
     <div class="fld" style="margin-top:4px"><label>Notes / Review</label><textarea id="e-notes" rows="4" placeholder="Notes..."></textarea></div>
     <button class="btn-p" onclick="saveEditTrade()" style="width:100%;margin-top:14px;padding:12px" id="e-save-btn">SAVE CHANGES</button>
   </div>
 </div>
 
+
+<!-- QUICK LOG FAB -->
+<button class="ql-fab" id="ql-fab" onclick="openQuickLog()" title="Quick Log Trade">&#9889;</button>
+
+<!-- QUICK LOG MODAL -->
+<div id="m-quick" class="moverlay" style="display:none" onclick="if(event.target===this)closeModal('m-quick')">
+  <div class="modal">
+    <button class="mclose" onclick="closeModal('m-quick')">&#215;</button>
+    <div class="modal-title">&#9889; Quick Log</div>
+    <div class="modal-sub">Capture the trade now &mdash; fill full details later from History.</div>
+    <div class="fg">
+      <div class="fld"><label>Date</label><input type="date" id="ql-date"></div>
+      <div class="fld"><label>Session</label><select id="ql-sess"><option>NY</option><option>Asia</option></select></div>
+      <div class="fld"><label>Timeframe</label><select id="ql-tf"><option>5M</option><option>15M</option></select></div>
+      <div class="fld"><label>Direction</label><select id="ql-dir" onchange="qlCalc()"><option>Long</option><option>Short</option></select></div>
+    </div>
+    <div class="fg">
+      <div class="fld"><label>Entry Price</label><input type="number" id="ql-entry" step="0.001" oninput="qlCalc()"></div>
+      <div class="fld"><label>Exit / TP</label><input type="number" id="ql-exit" step="0.001" oninput="qlCalc()"></div>
+      <div class="fld"><label>Stop Loss</label><input type="number" id="ql-sl" step="0.001"></div>
+      <div class="fld"><label>Lot Size</label><input type="number" id="ql-lots" step="0.01" value="0.01" oninput="qlCalc()"></div>
+    </div>
+    <div class="g2" style="margin-bottom:14px">
+      <div class="fld"><label>P&amp;L (USD)</label><input type="number" id="ql-pnl" step="0.01" class="auto"></div>
+      <div class="fld"><label>Result</label><select id="ql-result"><option>Win</option><option>Loss</option><option>BE</option></select></div>
+    </div>
+    <button class="btn-p" id="ql-save-btn" onclick="saveQuickTrade()" style="width:100%;padding:12px">&#9889; LOG TRADE</button>
+  </div>
+</div>
+
+<script>
+// -- QUICK LOG --
+window.openQuickLog=function(){
+  document.getElementById('ql-date').value=new Date().toISOString().split('T')[0];
+  ['ql-entry','ql-exit','ql-sl','ql-pnl'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  document.getElementById('ql-lots').value='0.01';
+  document.getElementById('ql-result').value='Win';
+  document.getElementById('ql-sess').value='NY';
+  document.getElementById('ql-dir').value='Long';
+  document.getElementById('ql-tf').value='5M';
+  openModal('m-quick');
+};
+window.qlCalc=function(){
+  const en=parseFloat(document.getElementById('ql-entry').value);
+  const ex=parseFloat(document.getElementById('ql-exit').value);
+  const lo=parseFloat(document.getElementById('ql-lots').value);
+  const di=document.getElementById('ql-dir').value;
+  if(!en||!ex||!lo)return;
+  const diff=di==='Long'?(ex-en):(en-ex);
+  const pnl=Math.round(diff*lo*100*100)/100;
+  document.getElementById('ql-pnl').value=pnl.toFixed(2);
+  document.getElementById('ql-result').value=pnl>0?'Win':pnl<0?'Loss':'BE';
+};
+window.saveQuickTrade=async function(){
+  const en=document.getElementById('ql-entry').value;
+  const sl=document.getElementById('ql-sl').value;
+  if(!en||!sl){flash('err','Entry Price and Stop Loss are required.');return}
+  const btn=document.getElementById('ql-save-btn');
+  btn.disabled=true;btn.textContent='SAVING...';
+  let pnl=parseFloat(document.getElementById('ql-pnl').value)||0;
+  const result=document.getElementById('ql-result').value;
+  if(result==='Loss'&&pnl>0)pnl=-pnl;
+  if(result==='Win'&&pnl<0)pnl=-pnl;
+  if(result==='BE')pnl=0;
+  const metaTag=buildMetaTag('','1','',100,'',5);
+  const exitP=document.getElementById('ql-exit').value;
+  const trade={
+    user_id:CU.id,
+    trade_date:document.getElementById('ql-date').value,
+    session:document.getElementById('ql-sess').value,
+    timeframe:document.getElementById('ql-tf').value,
+    direction:document.getElementById('ql-dir').value,
+    entry:parseFloat(en),
+    stop_loss:parseFloat(sl),
+    exit_price:exitP?parseFloat(exitP):null,
+    take_profit:exitP?parseFloat(exitP):null,
+    lot_size:parseFloat(document.getElementById('ql-lots').value)||0.01,
+    result,pnl,
+    notes:metaTag+'\n[Quick Log]',
+    confluence_score:0
+  };
+  const{data,error}=await DB.from('trades').insert(trade);
+  if(error){flash('err','Save failed: '+error.message);btn.disabled=false;btn.textContent='&#9889; LOG TRADE';return}
+  trades=[data[0],...trades];
+  renderDash();renderHist();renderStats();
+  closeModal('m-quick');
+  flash('ok','Trade quick-logged! Edit full details in History.');
+  btn.disabled=false;btn.textContent='&#9889; LOG TRADE';
+};
+
+</script>
 </body>
 </html>
